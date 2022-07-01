@@ -1,4 +1,4 @@
-name = "VerilogTemp"
+name = "Verilog"
 uuid = "54c5fdc4-1d70-4d58-a050-8ed29bc6e0c3"
 authors = ["Guilhem Ribeill <guilhem.ribeill@gmail.com> and contributors"]
 version = "0.1.0"
