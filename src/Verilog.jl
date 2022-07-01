@@ -19,7 +19,8 @@ module Verilog
   include("WireObject.jl")
 
   #codegen contains resources to create .v files and verilate them.
-  if is_linux()
+  using Base.Sys: islinux
+  if islinux()
     include("codegen.jl")
     include("verilator-adapter.c.jl")
   end

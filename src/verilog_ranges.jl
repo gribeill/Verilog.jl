@@ -2,7 +2,7 @@
 #creates ranges that help with making the julia verilog and the verilog much
 #more interpretable.
 
-doc"""
+"""
   v
 
   is an appendage that reverses the order of julia's ranges so that they have
@@ -22,11 +22,11 @@ doc"""
 
   `my_wire[bits:(bits-4)v]`
 """
-immutable v
+struct v
   value
 end
 
-doc"""
+"""
   msb
 
   is a special keyword which indicates that the value should go to the most
@@ -40,28 +40,28 @@ doc"""
   my_wire_2[16:0v] = Wire(0x0F00, 16)
   my_wire[(msb-4):(msb-8)]     # ==> Wire{3:0v}(0xF)
 """
-immutable msb;
+struct msb;
   value::Integer
 end
 
-doc"""
+"""
   VerilogRange
 
   is a range object that represents a verilog range.  These are declared by
   using the v ranges, so 5:0v is a VerilogRange from 0 to 5.
 """
-immutable VerilogRange <: AbstractUnitRange{Int64}
+struct VerilogRange <: AbstractUnitRange{Int64}
   start::Int64
   stop::Int64
 end
 
-doc"""
+"""
   RelativeRange
 
   is a range object that can take values which can be relative to the most
   significant bit.
 """
-immutable RelativeRange
+struct RelativeRange
   start::Union{Int64, msb}
   stop::Union{Int64, msb}
 end
@@ -69,7 +69,7 @@ end
 function Base.:*(i, ::Type{v}); v(i); end
 #allows
 
-function Base.colon(i::Integer, vv::v)
+function Base.:(:)(i::Integer, vv::v)
   #first possibility, vv.value is actually the type msb.
   if vv.value == msb
     RelativeRange(msb(0), i)
@@ -80,7 +80,7 @@ function Base.colon(i::Integer, vv::v)
   end
 end
 
-function Base.colon(m::Union{Type{msb}, msb}, vv::v)
+function Base.:(:)(m::Union{Type{msb}, msb}, vv::v)
   left = (m == msb) ? msb(0) : m
   (vv.value == msb) ? RelativeRange(msb(0), left) : RelativeRange(vv.value, left)
 end
@@ -110,9 +110,15 @@ export v, msb
 Base.range(i::Integer) = (i-1):0v
 
 #making a VerilogRange a well-defined iterable.
-Base.start(v::VerilogRange) = v.start
-Base.next(v::VerilogRange, state) = (state, state + ((v.stop >= v.start) ? 1 : - 1))
-Base.done(v::VerilogRange, state) = state == v.stop + ((v.stop >= v.start) ? 1 : -1)
+Base.iterate(v::VerilogRange) = (v.start, v.start)
+function Base.iterate(v::VerilogRange, state)
+    if state == v.stop
+        return nothing
+    else 
+        next = state + (v.stop >= v.start ? 1 : -1)
+        return (next, next)
+    end
+end
 Base.eltype(v::VerilogRange) = Int64
 Base.length(v::VerilogRange) = ((v.stop > v.start) ? (v.stop - v.start) : (v.start - v.stop)) + 1
 

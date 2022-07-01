@@ -1,5 +1,5 @@
 using Verilog
-using Base.Test
+using Test
 
 #makes life much easier.
 macro test_string(string, expr)

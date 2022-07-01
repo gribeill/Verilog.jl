@@ -1,6 +1,6 @@
 #Verigen.jl - stuff pertaining to verilog generation and processing.
 
-type Verigen
+struct Verigen
   module_name::Symbol
   inputs::Vector{Pair{Symbol,VerilogRange}}
   wires ::Dict{Symbol,Tuple{VerilogRange, Tuple}}
@@ -26,7 +26,7 @@ function v_fmt(i::Integer)
   return "[$i] "
 end
 
-type ModuleObject
+struct ModuleObject
   moduleparams::Tuple
   modulename::Symbol
   inputlist::Vector{String}
@@ -34,7 +34,7 @@ type ModuleObject
 end
 
 #type for module cache members
-type ModuleCache
+struct ModuleCache
   txt::String
   module_name::Symbol
   inputs::Vector{Symbol}
@@ -164,7 +164,7 @@ end
 
 ################################################################################
 
-doc"""
+"""
   `@input identifier rangedescriptor`
 
   binds an input to a given range descriptor.
@@ -193,7 +193,7 @@ export @input
 
 ################################################################################
 
-type AssignError <: Exception; s::String; end
+struct AssignError <: Exception; s::String; end
 
 
 

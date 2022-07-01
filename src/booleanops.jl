@@ -19,28 +19,28 @@ function Base.:&(lhs::Wire, rhs::Wire)
   Wire(lhs.values & rhs.values)
 end
 
-function Base.:|{N}(lhs::Wire{N}, rhs::Wire{N})
+function Base.:|(lhs::Wire{N}, rhs::Wire{N}) where {N}
   @sidescheck
   Wire(lhs.values | rhs.values)
 end
 
-function Base.:^{N}(lhs::Wire{N}, rhs::Wire{N})
+function Base.:^(lhs::Wire{N}, rhs::Wire{N}) where {N}
   @sidescheck
   Wire(lhs.values $ rhs.values)
 end
 
 #unary operators
-function Base.:&{N}(tgt::Wire{N})
+function Base.:&(tgt::Wire{N}) where {N}
   assigned(tgt) || throw(UnassignedError())
   Wire((&)(tgt.values...))
 end
 
-function Base.:|{N}(tgt::Wire{N})
+function Base.:|(tgt::Wire{N}) where {N}
   assigned(tgt) || throw(UnassignedError())
   Wire((|)(tgt.values...))
 end
 
-function Base.:^{N}(tgt::Wire{N})
+function Base.:^(tgt::Wire{N}) where {N}
   assigned(tgt) || throw(UnassignedError())
   Wire(($)(tgt.values...))
 end
