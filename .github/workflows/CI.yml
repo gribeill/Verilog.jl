@@ -51,5 +51,5 @@ jobs:
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
             using Verilog
-            DocMeta.setdocmeta!(VerilogTemp, :DocTestSetup, :(using Verilog); recursive=true)
+            DocMeta.setdocmeta!(Verilog, :DocTestSetup, :(using Verilog); recursive=true)
             doctest(Verilog)'
