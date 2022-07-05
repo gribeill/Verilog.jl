@@ -1,6 +1,6 @@
 Base.:*(times::Integer, w::Wire) = Wire(repeat(w.values, outer=times))
 
-function Base.:+{R,S}(lhs::Wire{R}, rhs::Wire{S})
+function Base.:+(lhs::Wire{R}, rhs::Wire{S}) where {R, S}
   (length(R) == length(S)) || throw(SizeMismatchError())
 
   #for now, disallow bitvectors of length more than 64
@@ -15,7 +15,7 @@ function Base.:+{R,S}(lhs::Wire{R}, rhs::Wire{S})
   result
 end
 
-function Base.:-{R,S}(lhs::Wire{R}, rhs::Wire{S})
+function Base.:-(lhs::Wire{R}, rhs::Wire{S}) where {R, S}
   (length(R) == length(S)) || throw(SizeMismatchError())
 
   #for now, disallow bitvectors of length more than 64
@@ -30,7 +30,7 @@ function Base.:-{R,S}(lhs::Wire{R}, rhs::Wire{S})
   result
 end
 
-function Base.:*{R,S}(lhs::Wire{R}, rhs::Wire{S})
+function Base.:*(lhs::Wire{R}, rhs::Wire{S}) where {R, S}
   new_length = length(R) + length(S)
 
   if (length(R) + length(S) > 64)
@@ -43,7 +43,7 @@ function Base.:*{R,S}(lhs::Wire{R}, rhs::Wire{S})
   result
 end
 
-function Base.:-{R}(tgt::Wire{R})
+function Base.:-(tgt::Wire{R}) where {R}
   #for now, disallow bitvectors of length more than 64
   if (length(R) > 64)
     warn("currently > 64 bit wires not supported.")
@@ -60,7 +60,7 @@ function trimInt64(n::Integer)
   ~(-(one(UInt64) << n))
 end
 
-function Base.:<{R,S}(lhs::Wire{R}, rhs::Wire{S})
+function Base.:<(lhs::Wire{R}, rhs::Wire{S}) where {R, S}
   (length(R) == length(S)) || throw(SizeMismatchError())
   if (length(R) > 64)
     warn("currently > 64 bit wires not supported.")
@@ -75,7 +75,7 @@ end
 
 # >, <=, >= come for free.
 
-function Base.:(==){R,S}(lhs::Wire{R}, rhs::Wire{S})
+function Base.:(==)(lhs::Wire{R}, rhs::Wire{S}) where {R, S}
   (length(R) == length(S)) || throw(SizeMismatchError())
   if (length(R) > 64)
     warn("currently > 64 bit wires not supported.")
@@ -91,7 +91,7 @@ end
 ################################################################################
 ## shifters
 
-function Base.:(<<){R,S}(lhs::Wire{R}, rhs::Wire{S})
+function Base.:(<<)(lhs::Wire{R}, rhs::Wire{S}) where {R, S}
   if (length(R) > 64)
     warn("currently > 64 bit wires not supported.")
     throw(SizeMismatchError())
@@ -104,7 +104,7 @@ function Base.:(<<){R,S}(lhs::Wire{R}, rhs::Wire{S})
   result = Wire(lhs.values.chunks[1] << rhs.values.chunks[1], length(R))
 end
 
-function Base.:(>>){R,S}(lhs::Wire{R}, rhs::Wire{S})
+function Base.:(>>)(lhs::Wire{R}, rhs::Wire{S}) where {R, S}
   if (length(R) > 64)
     warn("currently > 64 bit wires not supported.")
     throw(SizeMismatchError())
@@ -117,7 +117,7 @@ function Base.:(>>){R,S}(lhs::Wire{R}, rhs::Wire{S})
   result = Wire(lhs.values.chunks[1] >> rhs.values.chunks[1], length(R))
 end
 
-function Base.:(>>>){R,S}(lhs::Wire{R}, rhs::Wire{S})
+function Base.:(>>>)(lhs::Wire{R}, rhs::Wire{S}) where {R, S}
   if (length(R) > 64)
     warn("currently > 64 bit wires not supported.")
     throw(SizeMismatchError())

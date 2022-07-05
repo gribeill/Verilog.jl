@@ -1,10 +1,11 @@
-type UnassignedError   <: Exception; end
-type AssignedError     <: Exception; end
-type SizeMismatchError <: Exception; end
-
-
 #wire.jl - defines the Wire type.  Wires are stored under the hood as bitvectors.
-doc"""
+
+struct UnassignedError   <: Exception; end
+struct AssignedError     <: Exception; end
+struct SizeMismatchError <: Exception; end
+
+
+"""
   `Wire{R}`
 
   is the basic type for Verilog operations.  R specifies a "unit range" of integers.
@@ -14,29 +15,27 @@ doc"""
   Wire{6:2v} declares a five-bit verilog wire with indices spanning from
   2->6.
 """
-
-immutable Wire{R}
+struct Wire{R}
   values::BitVector
   assigned::BitVector
 
-  function Wire(bv1, bv2)
+  function Wire{R}(bv1, bv2) where {R}
     isa(R, VerilogRange) || throw(TypeError(:Wire, "specifier must be a VerilogRange", VerilogRange, typeof(R)))
     (R.start <= R.stop) || throw(TypeError(:Wire, "constructor range direction failed", R, "backwards"))
     (length(bv1) == length(bv2) == length(R)) || throw(SizeMismatchError())
-    new(bv1, bv2)
+    new{R}(bv1, bv2)
   end
 end
 
 ################################################################################
 ## Aliased naked constructors.
 (::Type{Wire})(bv::Bool)               = Wire{0:0v}(BitArray([bv]),trues(1))
-(::Type{Wire})(N::Signed)              = Wire{(N-1):0v}(BitVector(N), falses(N))
-(::Type{Wire})(R::VerilogRange)        = Wire{R}(BitVector(length(R)), falses(length(R)))
+(::Type{Wire})(N::Signed)              = Wire{(N-1):0v}(BitVector(undef, N), falses(N))
+(::Type{Wire})(R::VerilogRange)        = Wire{R}(BitVector(undef, length(R)), falses(length(R)))
 (::Type{Wire})(bv::BitVector)          = Wire{(length(bv)-1):0v}(bv, trues(length(bv)))
 #allow initialization of wire with an array, but remember to reverse it.
-(::Type{Wire})(wa::Vector{Wire})       = Wire(vcat(map((w) -> w.values, reverse(wa))...))
-(::Type{Wire}){N}(wa::Vector{Wire{N}}) = Wire(vcat(map((w) -> w.values, reverse(wa))...))
-(::Type{Wire})(ws::Wire...)            = Wire(collect(Wire, ws))
+(::Type{Wire})(wa::Vector{Wire}) where {R}          = Wire(vcat(map((w) -> w.values, reverse(wa))...))
+(::Type{Wire})(ws::Wire...)                         = Wire(collect(Wire, ws))
 
 #declaration with an unsigned integer
 function (::Type{Wire})(N::Unsigned, l::Integer = 0)
@@ -45,13 +44,15 @@ function (::Type{Wire})(N::Unsigned, l::Integer = 0)
   #mask out crap we don't want.
   Wire(N, range(l))
 end
+
 function (::Type{Wire})(N::Unsigned, r::VerilogRange)
   Wire{r}(N)
 end
-function (::Type{Wire{R}}){R}(N::Unsigned)
+
+function (::Type{Wire{R}})(N::Unsigned) where {R}
   #instantiate a bitarray.
   l = length(R)
-  ba = BitVector(length(R))
+  ba = BitVector(undef, length(R))
 
   N = (l < 64) ? (UInt64(N) & ((1 << l) - 1)) : UInt64(N)
   ba.chunks[1] = N
@@ -59,11 +60,11 @@ function (::Type{Wire{R}}){R}(N::Unsigned)
   Wire{R}(ba, trues(l))
 end
 
-function (::Type{Wire{R}}){R}()
+function (::Type{Wire{R}})() where {R}
   Wire{R}(falses(length(R)), falses(length(R)))
 end
 
-type UnsignedBigInt <: Unsigned
+struct UnsignedBigInt <: Unsigned
   value::BitArray
 end
 
@@ -71,7 +72,7 @@ end
 # conversion away from wires - necessary for integer reintepretation of verilog
 # wire definitons
 
-function Base.convert{R}(::Type{Unsigned}, w::Wire{R})
+function Base.convert(::Type{Unsigned}, w::Wire{R}) where {R}
   if length(R) <= 64
     return w.values.chunks[1]
   else
@@ -95,15 +96,15 @@ end
 #useful helper functions
 import Base: length, range
 
-length{R}(w::Wire{R}) = length(R)
-range{R}(w::Wire{R}) = R
+length(w::Wire{R}) where {R} = length(R)
+range(w::Wire{R})  where {R} = R
 assigned(w::Wire) = (&)(w.assigned...)
 
 ################################################################################
 # getters and setters
 import Base: getindex, setindex!
 
-function getindex{R}(w::Wire{R}, n::Integer)
+function getindex(w::Wire{R}, n::Integer) where {R}
   (n in R) || throw(BoundsError(w, n))
   #adjust for array indexing.
   access_idx = n + 1 - R.start
@@ -112,23 +113,23 @@ function getindex{R}(w::Wire{R}, n::Integer)
   Wire(w.values[access_idx])
 end
 
-getindex{R}(w::Wire{R}, ::Type{msb}) = getindex(w, R.stop)
-getindex{R}(w::Wire{R}, ridx::msb)   = getindex(w, R.stop - ridx.value)
+getindex(w::Wire{R}, ::Type{msb}) where {R}    = getindex(w, R.stop)
+getindex(w::Wire{R}, ridx::msb)   where {R}    = getindex(w, R.stop - ridx.value)
 
-function getindex{R}(w::Wire{R}, r::VerilogRange)
+function getindex(w::Wire{R}, r::VerilogRange) where {R}
   #returns a wire with the relevant selected values.
   issubset(r, R) || throw(BoundsError(w, r))
   rr = ((r.stop >= r.start) ? (r.start:r.stop) : (r.start:-1:r.stop))
-  (&)(w.assigned[rr + 1 - R.start]...) || throw(UnassignedError())
-  Wire(w.values[rr + 1 - R.start])
+  (&)(w.assigned[rr .+ 1 .- R.start]...) || throw(UnassignedError())
+  Wire(w.values[rr .+ 1 .- R.start])
 end
 
-getindex{R}(w::Wire{R}, r::RelativeRange) = getindex(w, parse_msb(r, R))
+getindex(w::Wire{R}, r::RelativeRange) where {R} = getindex(w, parse_msb(r, R))
 
 ################################################################################
 ## setters
 
-function setindex!{R}(dst::Wire{R}, src::Wire{0:0v}, n::Integer)
+function setindex!(dst::Wire{R}, src::Wire{0:0v}, n::Integer) where {R}
   (n in R) || throw(BoundsError(dst, n))
   offset_idx = n - R.start + 1
 
@@ -140,19 +141,19 @@ function setindex!{R}(dst::Wire{R}, src::Wire{0:0v}, n::Integer)
   nothing
 end
 
-setindex!{R}(dst::Wire{R}, src::Wire{0:0v}, ::Type{msb}) = setindex!(dst, src, R.stop)
-setindex!{R}(dst::Wire{R}, src::Wire{0:0v}, m::msb) = setindex!(dst, src, R.stop - m.value)
+setindex!(dst::Wire{R}, src::Wire{0:0v}, ::Type{msb}) where {R} = setindex!(dst, src, R.stop)
+setindex!(dst::Wire{R}, src::Wire{0:0v}, m::msb)      where {R} = setindex!(dst, src, R.stop - m.value)
 
 #you can dereference things as stepranges, but you can't dereference things
 #as stepranges.
-function Base.setindex!{RD, RS}(dst::Wire{RD}, src::Wire{RS}, r::VerilogRange)
+function Base.setindex!(dst::Wire{RD}, src::Wire{RS}, r::VerilogRange) where {RD, RS}
   #check for size mismatch.
   (r.stop >= r.start) || throw(ArgumentError("only forward VerilogRanges allowed for setting"))
   (length(r) == length(RS)) || throw(SizeMismatchError())
   (issubset(r, RD)) || throw(BoundsError(dst, r))
 
   #the range offset to where they're actually stored in the destination array
-  offset_range = r - RD.start + 1
+  offset_range = @. r - RD.start + 1
   for idx in 1:length(r)
     dst.assigned[offset_range[idx]] && throw(AssignedError())
     src.assigned[idx]               || throw(UnassignedError())
@@ -166,14 +167,12 @@ function Base.setindex!{RD, RS}(dst::Wire{RD}, src::Wire{RS}, r::VerilogRange)
   nothing
 end
 
-Base.setindex!{RD, RS}(dst::Wire{RD}, src::Wire{RS}, r::RelativeRange) = setindex!(dst, src, parse_msb(r, RD))
+Base.setindex!(dst::Wire{RD}, src::Wire{RS}, r::RelativeRange) where {RD, RS} = setindex!(dst, src, parse_msb(r, RD))
 
 #it's useful to declare a single wire shorthand
-typealias SingleWire Wire{0:0v}
+const SingleWire = Wire{0:0v}
 
-#=
-typealias OptionalWire{R}    Union{Void, Wire{R}}
-typealias OptionalSingleWire Union{Void, SingleWire}
-=#
+const OptionalWire{R}    = Union{Nothing, Wire{R}} where R
+const OptionalSingleWire = Union{Nothing, SingleWire}
 
 export Wire, SingleWire, OptionalWire, OptionalSingleWire

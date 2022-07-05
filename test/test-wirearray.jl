@@ -1,6 +1,6 @@
 @verilog function wa(x::Wire{1:0v})
 
-  wirearray = Vector{Wire{1:0v}}(4)
+  wirearray = Vector{Wire{1:0v}}(undef, 4)
 
   for idx = 1:4
     wirearray[idx] = x
@@ -27,7 +27,7 @@ endmodule
 
 @verilog function wa2(x::Wire{1:0v})
 
-  wirearray = Vector{Wire{1:0v}}(4)
+  wirearray = Vector{Wire{1:0v}}(undef, 4)
 
   wirearray[1] = Wire(0x3, 2)
 
@@ -60,7 +60,7 @@ end
 
 @verilog function wa3(x::Wire{1:0v})
 
-  wirearray = Vector{Wire{1:0v}}(4)
+  wirearray = Vector{Wire{1:0v}}(undef, 4)
 
   wirearray[1] = x
   wirearray[2] = flipme(wirearray[1])
@@ -100,7 +100,7 @@ end
 
 @verilog function wa4(x::Wire{1:0v})
 
-  wirearray = Vector{Wire{1:0v}}(4)
+  wirearray = Vector{Wire{1:0v}}(undef, 4)
 
   wirearray[1] = x
   (wirearray[2], wirearray[3]) = twooutputs(wirearray[1])

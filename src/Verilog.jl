@@ -1,5 +1,7 @@
 module Verilog
 
+  using MacroTools
+
   #support for -v suffixed verilog-style ranges.
   #support for python-style range() indexing
   include("verilog_ranges.jl")
@@ -19,7 +21,8 @@ module Verilog
   include("WireObject.jl")
 
   #codegen contains resources to create .v files and verilate them.
-  if is_linux()
+  using Base.Sys: islinux
+  if islinux()
     include("codegen.jl")
     include("verilator-adapter.c.jl")
   end

@@ -39,7 +39,7 @@ function strip_wire_inputs!(f::Expr)
     elseif isa(argument.args[2], Expr) &&
       (argument.args[2].head == :curly) &&
       (argument.args[2].args[1] == :Wire) &&
-      (argument.args[2].args[2].head == :(:))
+      (argument.args[2].args[2].args[1] == :(:))
       #save the needed symbol and wire range parameter.
       push!(inputs_list, (argument.args[1], argument.args[2].args[2]))
     else
@@ -50,20 +50,27 @@ function strip_wire_inputs!(f::Expr)
 
   #take the old arguments list and make them the new arguments
   f.args[1].args = new_arguments
-
   inputs_list, param_list
 end
 
 function inject_inputs!(f::Expr, inputlist)
   #reverse it, because inject! prepends
   for input in reverse(inputlist)
-    inject!(f, :(Verilog.@input $(input[1]) $(input[2])))
+    if isnothing(input[2])
+      inject!(f, :(Verilog.@input $(input[1]) ))
+    else
+      inject!(f, :(Verilog.@input $(input[1]) $(input[2])))
+    end
   end
+  f = MacroTools.striplines(f)
+  nothing
 end
 
 function inject_verilog_generator!(f::Expr, params)
   fn_symbol = f.args[1].args[1]
   inject!(f, :(Verilog.@verigen($fn_symbol, $(params...))))
+  f = MacroTools.striplines(f)
+  nothing
 end
 
 #this should be passed the function block.
@@ -77,15 +84,14 @@ function linebyline_adaptor!(block::Expr, input_list = nothing)
       #check if we're trying to return a tuple of wire symbols.
       identifiers = argument.args
       push!(newargs, :(Verilog.@final $(identifiers...)))
-    elseif (input_list != nothing) &&
+    elseif (!isnothing(input_list)) &&
         (argument.head == :macrocall)  &&
         (argument.args[1] == Symbol("@input"))
-
       #search through the input list for a corresponding input statement and set
       #the parameter value.
       for idx = 1:length(input_list)
-        if (input_list[idx][1] == argument.args[2])
-          input_list[idx] = (argument.args[2], argument.args[3])
+        if (input_list[idx][1] == argument.args[3])
+          input_list[idx] = (argument.args[3], argument.args[4])
         end
       end
     elseif (argument.head == :(=))
@@ -93,14 +99,17 @@ function linebyline_adaptor!(block::Expr, input_list = nothing)
       identifier = argument.args[1]
       assignment = argument.args[2]
       push!(newargs, :(Verilog.@assign $identifier $assignment))
+    elseif (argument.head == :block)
+      linebyline_adaptor!(argument, input_list)
+      push!(newargs, argument)
     elseif (argument.head == :for)
       #println("forloop block:")
-      linebyline_adaptor!(argument.args[2])
+      linebyline_adaptor!(argument.args[2], input_list)
       push!(newargs, argument)
     elseif (argument.head == :if)
-      linebyline_adaptor!(argument.args[2])
+      linebyline_adaptor!(argument.args[2], input_list)
       if length(argument.args) == 3
-        linebyline_adaptor!(argument.args[3])
+        linebyline_adaptor!(argument.args[3], input_list)
       end
       push!(newargs, argument)
     elseif (argument.head == :return)
@@ -122,12 +131,15 @@ function linebyline_adaptor!(block::Expr, input_list = nothing)
   end
   #replace the old arguments with new arguments.
   block.args = newargs
+  block = MacroTools.striplines(block)
   nothing
 end
 
 function inject_verilog_finisher!(f::Expr)
   push!(f.args[2].args, :(@label fin))
   push!(f.args[2].args, :(Verilog.@verifin))
+  f = MacroTools.striplines(f)
+  nothing
 end
 
 function module_transform!(f_module::Expr, input_list, params_list)
@@ -160,7 +172,6 @@ function module_translate(f::Expr)
   set_output_type!(f_module, :String)
 
   inject!(f_module, :(Verilog.@verimode :verilog))
-
   return f_module
 end
 
@@ -195,7 +206,7 @@ function substitute_wire_inputs_as_wiretext!(f::Expr)
     elseif isa(argument.args[2], Expr) &&
       (argument.args[2].head == :curly) &&
       (argument.args[2].args[1] == :Wire) &&
-      (argument.args[2].args[2].head == :(:))
+      (argument.args[2].args[2].args[1] == :(:))
 
       colondef = argument.args[2].args[2]
 
@@ -224,6 +235,5 @@ function wiretext_translate(f::Expr)
   input_identifiers = [t[1] for t in input_list]
 
   inject!(f_wiretext, :(Verilog.@verimode :modulecall $(input_identifiers...)))
-
   f_wiretext
 end
