@@ -36,7 +36,7 @@ doc"""
 
     for d in deps
       if !((d in result) || (d in exclude))
-        unshift!(result, d)
+        pushfirst!(result, d)
         result = union(result, find_dependencies(d[1], d[2:end]))
       end
     end
@@ -89,7 +89,7 @@ function generate_verilog_file(path::String, mod::Function, p::Tuple; exclude = 
 
   #return its dependencies so that we can keep track of all modules we've
   #created so far.
-  unshift!(deps, nkey)
+  pushfirst!(deps, nkey)
   deps
 end
 

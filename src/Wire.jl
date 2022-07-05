@@ -34,8 +34,8 @@ end
 (::Type{Wire})(R::VerilogRange)        = Wire{R}(BitVector(undef, length(R)), falses(length(R)))
 (::Type{Wire})(bv::BitVector)          = Wire{(length(bv)-1):0v}(bv, trues(length(bv)))
 #allow initialization of wire with an array, but remember to reverse it.
-(::Type{Wire})(wa::Vector{Wire{R}}) where {R}      = Wire(vcat(map((w) -> w.values, reverse(wa))...))
-(::Type{Wire})(ws::Wire...)                        = Wire(collect(Wire, ws))
+(::Type{Wire})(wa::Vector{Wire}) where {R}          = Wire(vcat(map((w) -> w.values, reverse(wa))...))
+(::Type{Wire})(ws::Wire...)                         = Wire(collect(Wire, ws))
 
 #declaration with an unsigned integer
 function (::Type{Wire})(N::Unsigned, l::Integer = 0)
@@ -44,6 +44,7 @@ function (::Type{Wire})(N::Unsigned, l::Integer = 0)
   #mask out crap we don't want.
   Wire(N, range(l))
 end
+
 function (::Type{Wire})(N::Unsigned, r::VerilogRange)
   Wire{r}(N)
 end
@@ -51,7 +52,7 @@ end
 function (::Type{Wire{R}})(N::Unsigned) where {R}
   #instantiate a bitarray.
   l = length(R)
-  ba = BitVector(length(R))
+  ba = BitVector(undef, length(R))
 
   N = (l < 64) ? (UInt64(N) & ((1 << l) - 1)) : UInt64(N)
   ba.chunks[1] = N
@@ -119,8 +120,8 @@ function getindex(w::Wire{R}, r::VerilogRange) where {R}
   #returns a wire with the relevant selected values.
   issubset(r, R) || throw(BoundsError(w, r))
   rr = ((r.stop >= r.start) ? (r.start:r.stop) : (r.start:-1:r.stop))
-  (&)(w.assigned[rr + 1 - R.start]...) || throw(UnassignedError())
-  Wire(w.values[rr + 1 - R.start])
+  (&)(w.assigned[rr .+ 1 .- R.start]...) || throw(UnassignedError())
+  Wire(w.values[rr .+ 1 .- R.start])
 end
 
 getindex(w::Wire{R}, r::RelativeRange) where {R} = getindex(w, parse_msb(r, R))
@@ -152,7 +153,7 @@ function Base.setindex!(dst::Wire{RD}, src::Wire{RS}, r::VerilogRange) where {RD
   (issubset(r, RD)) || throw(BoundsError(dst, r))
 
   #the range offset to where they're actually stored in the destination array
-  offset_range = r - RD.start + 1
+  offset_range = @. r - RD.start + 1
   for idx in 1:length(r)
     dst.assigned[offset_range[idx]] && throw(AssignedError())
     src.assigned[idx]               || throw(UnassignedError())

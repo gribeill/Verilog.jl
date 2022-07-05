@@ -1,6 +1,6 @@
 #Verigen.jl - stuff pertaining to verilog generation and processing.
 
-struct Verigen
+mutable struct Verigen
   module_name::Symbol
   inputs::Vector{Pair{Symbol,VerilogRange}}
   wires ::Dict{Symbol,Tuple{VerilogRange, Tuple}}
@@ -26,7 +26,7 @@ function v_fmt(i::Integer)
   return "[$i] "
 end
 
-struct ModuleObject
+mutable struct ModuleObject
   moduleparams::Tuple
   modulename::Symbol
   inputlist::Vector{String}
@@ -34,7 +34,7 @@ struct ModuleObject
 end
 
 #type for module cache members
-struct ModuleCache
+mutable struct ModuleCache
   txt::String
   module_name::Symbol
   inputs::Vector{Symbol}
@@ -257,10 +257,10 @@ macro assign(ident, expr)
         #go ahead and overwrite all of these with empty wires of the correct type.
         #reassign assign_temp as an array of wireobjects with the same dimensions
         #as the array of wires.
-        assign_temp = Array{Verilog.WireObject{wrange}, wdim}(wa_size...)
-        for idx = 1:length(assign_temp)
+        assign_temp = Array{Verilog.WireObject{wrange}, wdim}(undef, wa_size...)
+        for idx in eachindex(assign_temp)
           #fill the wireobject with the appropriate dereferencing indexes.
-          name = string($ident_symbol, join(map((n) -> "[$(n-1)]", ind2sub(wa_size, idx))))
+          name = string($ident_symbol, join(map((n) -> "[$(n-1)]", idx)))
           assign_temp[idx] = Verilog.WireObject{wrange}(name)
         end
         $ident = assign_temp
@@ -457,7 +457,7 @@ end
 
 macro suffix(stringvalue)
   esc(quote
-    __verilog_state.module_name = string(__verilog_state.module_name, "_", $stringvalue)
+    __verilog_state.module_name = Symbol(string(__verilog_state.module_name, "_", $stringvalue))
   end)
 end
 

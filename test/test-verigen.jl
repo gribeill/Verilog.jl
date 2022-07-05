@@ -16,22 +16,22 @@ module g(
 endmodule
 """
 
-function h()
-  Verilog.@verimode :verilog
-  Verilog.@verigen h
-  Verilog.@input my_wire 7:0v
-  Verilog.@assign new_wire ~(my_wire)
-  Verilog.@verifin
-end
+# function h()
+#   Verilog.@verimode :verilog
+#   Verilog.@verigen h
+#   Verilog.@input my_wire 7:0v
+#   Verilog.@assign new_wire ~(my_wire)
+#   Verilog.@verifin
+# end
 
-@test h() == """
-module h(
-  input [7:0] my_wire,
-  output [7:0] new_wire);
+# @test h() == """
+# module h(
+#   input [7:0] my_wire,
+#   output [7:0] new_wire);
 
-  assign new_wire = ~(my_wire);
-endmodule
-"""
+#   assign new_wire = ~(my_wire);
+# endmodule
+# """
 
 @verilog function arbitrary_binary(v1::Wire, v2::Wire{4:0v}, bits)
   @suffix "$(bits)_bit"

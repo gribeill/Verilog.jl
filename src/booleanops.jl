@@ -2,7 +2,7 @@
 function Base.:~(w::Wire)
   #if any of them are undefined we have a problem.
   assigned(w) || throw(UnassignedError())
-  Wire(~w.values)
+  Wire(.~w.values)
 end
 
 macro sidescheck()
@@ -16,17 +16,17 @@ end
 
 function Base.:&(lhs::Wire, rhs::Wire)
   @sidescheck
-  Wire(lhs.values & rhs.values)
+  Wire(lhs.values .& rhs.values)
 end
 
 function Base.:|(lhs::Wire{N}, rhs::Wire{N}) where {N}
   @sidescheck
-  Wire(lhs.values | rhs.values)
+  Wire(lhs.values .| rhs.values)
 end
 
 function Base.:^(lhs::Wire{N}, rhs::Wire{N}) where {N}
   @sidescheck
-  Wire(lhs.values $ rhs.values)
+  Wire(lhs.values .⊻ rhs.values)
 end
 
 #unary operators

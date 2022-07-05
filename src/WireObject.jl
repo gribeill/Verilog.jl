@@ -2,8 +2,10 @@
 # much of the magic happens here as this object can be passed around,
 # representing Wire object state.
 
-struct WireObject{R};
+struct WireObject{R}
   lexical_representation::String
+
+  WireObject{R}(repr) where {R} = new{R}(repr)
 end
 
 Base.range(::WireObject{R}) where {R} = R 
@@ -12,10 +14,10 @@ lr(w) = w.lexical_representation
 
 #lexical transformations for logical operators.
 #unary logical operators
-Base.:~(w::WireObject{R}) where {R} = WireObject{R}(string("~(", w.lexical_representation, ")")) where {R}
-Base.:&(w::WireObject{R}) where {R} = WireObject{0:0v}(string("&(", w.lexical_representation, ")")) where {R}
-Base.:|(w::WireObject{R}) where {R} = WireObject{0:0v}(string("|(", w.lexical_representation, ")")) where {R}
-Base.:^(w::WireObject{R}) where {R} = WireObject{0:0v}(string("^(", w.lexical_representation, ")")) where {R}
+Base.:~(w::WireObject{R}) where {R} = WireObject{R}(string("~(", w.lexical_representation, ")"))
+Base.:&(w::WireObject{R}) where {R} = WireObject{0:0v}(string("&(", w.lexical_representation, ")")) 
+Base.:|(w::WireObject{R}) where {R} = WireObject{0:0v}(string("|(", w.lexical_representation, ")")) 
+Base.:^(w::WireObject{R}) where {R} = WireObject{0:0v}(string("^(", w.lexical_representation, ")")) 
 #make single-wire objects pass through without doing any collection.
 Base.:&(w::WireObject{0:0v}) = w
 Base.:|(w::WireObject{0:0v}) = w

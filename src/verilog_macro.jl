@@ -6,7 +6,7 @@ const modules = Array{Symbol, 1}()
 ## can be.
 
 function inject!(f::Expr, expr)
-  unshift!(f.args[2].args, expr)
+  pushfirst!(f.args[2].args, expr)
 end
 
 function set_output_type!(f::Expr, output_type)
@@ -40,7 +40,7 @@ function substitute_wire_inputs!(f::Expr)
     elseif isa(argument.args[2], Expr) &&
       (argument.args[2].head == :curly) &&
       (argument.args[2].args[1] == :Wire) &&
-      (argument.args[2].args[2].head == :(:))
+      (argument.args[2].args[2].args[1] == :(:))
 
       #save the needed symbol and wire range parameter.
       wire_macro_list[argument.args[1]] = argument.args[2].args[2]
@@ -69,8 +69,8 @@ function integer_translate(f::Expr)
   end
 
   inject!(f_integer, :(Verilog.@verimode :integermode))
-
   f_integer
+
 end
 
 ################################################################################
@@ -99,6 +99,7 @@ end
 
 macro verilog(f)
   #first check to see if it's a function.
+  f = MacroTools.striplines(f)
   if f.head == :function
     #make three copies of the function.
 

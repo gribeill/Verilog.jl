@@ -1,5 +1,7 @@
 module Verilog
 
+  using MacroTools
+
   #support for -v suffixed verilog-style ranges.
   #support for python-style range() indexing
   include("verilog_ranges.jl")
