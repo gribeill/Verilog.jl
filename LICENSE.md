@@ -1,5 +1,7 @@
 The Verilog.jl package is licensed under the MIT "Expat" License:
 
+> 
+> Copyright (c) 2022: Guilhem Ribeill
 > Copyright (c) 2017: Isaac Yonemoto.
 > 
 > Permission is hereby granted, free of charge, to any person obtaining a copy

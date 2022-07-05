@@ -1,16 +1,16 @@
-using VerilogTemp
+using Verilog
 using Documenter
 
-DocMeta.setdocmeta!(VerilogTemp, :DocTestSetup, :(using VerilogTemp); recursive=true)
+DocMeta.setdocmeta!(Verilog, :DocTestSetup, :(using Verilog); recursive=true)
 
 makedocs(;
-    modules=[VerilogTemp],
+    modules=[Verilog],
     authors="Guilhem Ribeill <guilhem.ribeill@gmail.com> and contributors",
-    repo="https://github.com/gribeill/VerilogTemp.jl/blob/{commit}{path}#{line}",
-    sitename="VerilogTemp.jl",
+    repo="https://github.com/gribeill/Verilog.jl/blob/{commit}{path}#{line}",
+    sitename="Verilog.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://gribeill.github.io/VerilogTemp.jl",
+        canonical="https://gribeill.github.io/Verilog.jl",
         edit_link="master",
         assets=String[],
     ),
@@ -20,6 +20,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/gribeill/VerilogTemp.jl",
+    repo="github.com/gribeill/Verilog.jl",
     devbranch="master",
 )

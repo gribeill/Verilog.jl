@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = VerilogTemp
+CurrentModule = Verilog
 ```
 
-# VerilogTemp
+# Verilog.jl
 
-Documentation for [VerilogTemp](https://github.com/gribeill/VerilogTemp.jl).
+Documentation for [Verilog](https://github.com/gribeill/Verilog.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [VerilogTemp]
+Modules = [Verilog]
 ```

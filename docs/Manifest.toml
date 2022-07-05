@@ -94,7 +94,7 @@ uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
-[[deps.VerilogTemp]]
+[[deps.Verilog]]
 path = ".."
 uuid = "54c5fdc4-1d70-4d58-a050-8ed29bc6e0c3"
 version = "0.1.0"
