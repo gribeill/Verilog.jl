@@ -13,7 +13,7 @@ function normalized_key(mod::Union{Function, Symbol}, p::Tuple)
   throw(ArgumentError("Key not found!"))
 end
 
-doc"""
+"""
   `Verilog.find_dependencies(mod, (params...))`
 
   outputs the set of dependencies of a certain module.
@@ -51,7 +51,7 @@ const lintoff_stmts = """
 
 """
 
-doc"""
+"""
   `generate_verilog_file(path, mod, (params...); exclude = [])`
 
   pass this function a path, (verilog module) name and the parameters, and it
@@ -95,7 +95,7 @@ end
 
 export generate_verilog_file
 
-doc"""
+"""
   `verilate(mod::Function, p::Tuple)`
   uses verilator to create a .so file corresponding to the library.
   Each of the functions in the mods array will be the top-level element
@@ -160,7 +160,7 @@ function verilate(mod::Function, p::Tuple; path::String = ".", libname::String="
   end)
 end
 
-doc"""
+"""
   `@verilate function parameters [path]`
 
   verilates a @verilog function with the passed parameter and places the shared

@@ -1,4 +1,4 @@
-doc"""
+"""
   Verilog.verilator_adapter(id)
 
   creates the required C file for verilation.
