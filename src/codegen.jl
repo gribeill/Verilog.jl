@@ -213,7 +213,7 @@ macro verilate(f, p = (), path...)
   #build the output type object to be consistent with the c definition.
   #also build the return tuple command.
   otypename = Symbol("__", name, "_output_type")
-  output_type_generator = :(type $otypename; end)
+  output_type_generator = :(struct $otypename; end)
   return_tuple = :(())
   create_tuple = :(())
   for idx = 1:length(mod_cache.outputlist)
