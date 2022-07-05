@@ -1,5 +1,9 @@
 # Verilog.jl
 
+![CI](https://github.com/gribeill/Verilog.jl/actions/workflows/CI.yml/badge.svg)
+
+----
+
 A Verilog-generation DSL for Julia.  Inspired by Chisel, but we like Julia
 better.  Not having to type in semicolons alone makes it worth it!
 
