@@ -50,6 +50,6 @@ jobs:
       - run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
-            using VerilogTemp
-            DocMeta.setdocmeta!(VerilogTemp, :DocTestSetup, :(using VerilogTemp); recursive=true)
-            doctest(VerilogTemp)'
+            using Verilog
+            DocMeta.setdocmeta!(VerilogTemp, :DocTestSetup, :(using Verilog); recursive=true)
+            doctest(Verilog)'
